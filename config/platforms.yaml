@@ -1,0 +1,44 @@
+platforms:
+  tiktok:
+    enabled: true
+    format: "9:16"
+    resolution: [1080, 1920]
+    max_duration_seconds: 60
+    hashtags_limit: 10
+
+  instagram:
+    enabled: true
+    format: "1:1"
+    resolution: [1080, 1080]
+    carousel_max_images: 10
+
+  youtube:
+    enabled: true
+    format: "9:16"
+    resolution: [1080, 1920]
+    category_id: "28"
+    privacy: "public"
+
+  facebook:
+    enabled: true
+    format: "16:9"
+    resolution: [1920, 1080]
+
+content:
+  channel_name: "CJ_Dev4.20"
+  language: "es"
+  hashtags_base:
+    - "#programacion"
+    - "#python"
+    - "#aprendeaprogramar"
+    - "#coding"
+    - "#developer"
+
+theme_colors:
+  variables: "#6C63FF"
+  condicionales: "#059669"
+  ciclos: "#0ea5e9"
+  funciones: "#dc2626"
+  listas: "#f59e0b"
+  clases: "#8b5cf6"
+  decoradores: "#ec4899"

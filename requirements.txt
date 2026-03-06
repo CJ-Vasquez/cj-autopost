@@ -1,0 +1,32 @@
+# Google APIs
+google-auth==2.27.0
+google-auth-oauthlib==1.2.0
+google-api-python-client==2.118.0
+gspread==6.0.2
+
+# Procesamiento de imagen y video
+Pillow==10.2.0
+moviepy==1.0.3
+pygments==2.17.2
+
+# Voz
+gTTS==2.5.1
+
+# Redes sociales
+requests==2.31.0
+httpx==0.26.0
+
+# Utilidades
+python-dotenv==1.0.1
+PyYAML==6.0.1
+pydantic==2.6.1
+pydantic-settings==2.2.1
+tenacity==8.2.3
+structlog==24.1.0
+schedule==1.2.1
+click==8.1.7
+rich==13.7.0
+
+# Testing
+pytest==8.0.0
+pytest-mock==3.12.0

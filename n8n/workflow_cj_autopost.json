@@ -1,0 +1,216 @@
+{
+  "name": "CJ_Dev4.20 AutoPost",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-schedule",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /data/cj_autopost && python main.py --validate",
+        "timeout": 30
+      },
+      "id": "node-validate",
+      "name": "Validar sistema",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /data/cj_autopost && python main.py",
+        "timeout": 300
+      },
+      "id": "node-execute",
+      "name": "Ejecutar AutoPost",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.stdout }}",
+              "operation": "contains",
+              "value2": "PUBLICACIÓN COMPLETADA"
+            }
+          ]
+        }
+      },
+      "id": "node-check-success",
+      "name": "Exito?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /data/cj_autopost && python -c \"from core.content_reader import ContentReader; r = ContentReader(); print(r.get_pending_count())\"",
+        "timeout": 30
+      },
+      "id": "node-check-content",
+      "name": "Verificar contenido restante",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1130, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ parseInt($json.stdout) }}",
+              "operation": "smallerEqual",
+              "value2": 7
+            }
+          ]
+        }
+      },
+      "id": "node-low-content",
+      "name": "Contenido bajo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1350, 200]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=⚠️ *Alerta de contenido bajo — CJ_Dev4.20*\n\nSolo quedan {{ $json.stdout }} días de contenido.\nAgrega más temas al Google Sheets.",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "node-telegram-low",
+      "name": "Alerta contenido bajo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1570, 100],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=✅ *AutoPost completado — CJ_Dev4.20*\n\n{{ $json.stdout }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "node-telegram-success",
+      "name": "Log exito",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1350, 400],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=❌ *ERROR en AutoPost — CJ_Dev4.20*\n\n{{ $json.stderr || $json.stdout }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "node-telegram-error",
+      "name": "Notificar error",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1130, 500],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=❌ *ERROR CRÍTICO al iniciar — CJ_Dev4.20*\n\nLa validación del sistema falló.\n{{ $json.stderr }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "node-telegram-init-error",
+      "name": "Notificar fallo inicio",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [690, 500],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [{ "node": "Validar sistema", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validar sistema": {
+      "main": [
+        [{ "node": "Ejecutar AutoPost", "type": "main", "index": 0 }]
+      ],
+      "error": [
+        [{ "node": "Notificar fallo inicio", "type": "main", "index": 0 }]
+      ]
+    },
+    "Ejecutar AutoPost": {
+      "main": [
+        [{ "node": "Exito?", "type": "main", "index": 0 }]
+      ],
+      "error": [
+        [{ "node": "Notificar error", "type": "main", "index": 0 }]
+      ]
+    },
+    "Exito?": {
+      "main": [
+        [{ "node": "Verificar contenido restante", "type": "main", "index": 0 }],
+        [{ "node": "Notificar error", "type": "main", "index": 0 }]
+      ]
+    },
+    "Verificar contenido restante": {
+      "main": [
+        [{ "node": "Contenido bajo?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Contenido bajo?": {
+      "main": [
+        [{ "node": "Alerta contenido bajo", "type": "main", "index": 0 }],
+        [{ "node": "Log exito", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "America/Lima",
+    "saveManualExecutions": true,
+    "saveDataSuccessExecution": "all"
+  }
+}
